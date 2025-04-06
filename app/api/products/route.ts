@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/db';
 import generateSku from '@/utils/generator/sku';
+import imagekit from '@/lib/imagekit';
 
 // GET products
 export async function GET(req: Request) {
@@ -43,7 +44,6 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // Validasi field minimal
     const requiredFields = ['nama_barang', 'brand', 'kategori'];
     for (const field of requiredFields) {
       if (!body[field]) {
@@ -51,10 +51,20 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate SKU otomatis
-    let sku = generateSku(body.nama_barang, body.brand, body.kategori);
+    const existingProduct = await collection.findOne({
+      nama_barang: body.nama_barang,
+      brand: body.brand,
+      kategori: body.kategori
+    });
 
-    // Cek SKU bentrok, ulangi kalau sudah ada
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: 'Produk dengan nama, brand, dan kategori yang sama sudah pernah ditambahkan' },
+        { status: 409 }
+      );
+    }
+
+    let sku = generateSku(body.nama_barang, body.brand, body.kategori);
     let attempts = 0;
     while (await collection.findOne({ sku }) && attempts < 5) {
       sku = generateSku(body.nama_barang, body.brand, body.kategori);
@@ -65,10 +75,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Gagal menghasilkan SKU unik' }, { status: 500 });
     }
 
+    // ✅ Upload base64 gambar ke ImageKit
+    async function uploadBase64(base64: string, fileNamePrefix: string) {
+      if (!base64) return null;
+      const result = await imagekit.upload({
+        file: base64,
+        fileName: `${fileNamePrefix}-${sku}`,
+      });
+      return result.url;
+    }
+
+    const [gambarUrl, designUrl] = await Promise.all([
+      uploadBase64(body.gambar_url, 'gambar'),
+      uploadBase64(body.design_url, 'design')
+    ]);
+
+
     const now = new Date();
     const product = {
       ...body,
       sku,
+      gambar_url: gambarUrl,
+      design_url: designUrl,
       created_at: now,
       updated_at: now,
       search_field: [
