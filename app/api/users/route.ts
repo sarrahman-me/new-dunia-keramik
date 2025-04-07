@@ -1,53 +1,62 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/db';
-import bcrypt from "bcrypt";
+import supabase from '@/lib/supabase';
+import bcrypt from 'bcrypt';
 
-export async function GET() {
-  try {
-    const client = await clientPromise;
-    const db = client.db('duniakeramik');
-    const collection = db.collection('users');
-
-    const users = await collection.find({}, { projection: { password: 0 } }).toArray();
-
-    return NextResponse.json({ users });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    return NextResponse.json({ error: 'Gagal mengambil data pengguna' + error }, { status: 500 });
-  }
-}
-
+// POST: Tambah user baru
 export async function POST(req: Request) {
   try {
-    const client = await clientPromise;
-    const db = client.db('duniakeramik');
-    const collection = db.collection('users');
+    const body = await req.json();
+    const { nama, username, password } = body;
 
-    const { username, password, permissions } = await req.json();
-
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username dan password harus diisi' }, { status: 400 });
+    if (!nama || !username || !password) {
+      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const existingUser = await collection.findOne({ username });
-    if (existingUser) {
-      return NextResponse.json({ error: 'Username sudah digunakan' }, { status: 400 });
+    // Cek apakah username sudah ada
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (existing) {
+      return NextResponse.json({ error: 'Username sudah digunakan' }, { status: 409 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = {
+    const now = new Date().toISOString();
+
+    const { error } = await supabase.from('users').insert({
+      nama,
       username,
       password: hashedPassword,
-      permissions: permissions || { canAdd: false, canEdit: false, canDelete: false },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      created_at: now,
+      updated_at: now,
+      last_login: now,
+    });
 
-    const result = await collection.insertOne(newUser);
-    return NextResponse.json({ message: 'Pengguna berhasil ditambahkan', id: result.insertedId });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    return NextResponse.json({ error: 'Gagal menambahkan pengguna' + error }, { status: 500 });
+    if (error) throw error;
+
+    return NextResponse.json({ message: 'User berhasil ditambahkan' });
+  } catch (error) {
+    console.error('POST /api/users error:', error);
+    return NextResponse.json({ error: 'Gagal menambahkan user' }, { status: 500 });
   }
 }
 
+// GET: Ambil semua user (tanpa password)
+export async function GET() {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, nama, username, created_at, updated_at, last_login')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('GET /api/users error:', error);
+    return NextResponse.json({ error: 'Gagal mengambil data user' }, { status: 500 });
+  }
+}
