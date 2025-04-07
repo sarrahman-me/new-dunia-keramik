@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/db';
-import bcrypt from 'bcrypt';
-import { IUser } from '@/interface/user';
+import bcrypt from "bcrypt";
 
 export async function GET() {
   try {
@@ -49,43 +48,6 @@ export async function POST(req: Request) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return NextResponse.json({ error: 'Gagal menambahkan pengguna' + error }, { status: 500 });
-  }
-}
-
-export async function PATCH(req: Request) {
-  try {
-    const client = await clientPromise;
-    const db = client.db('duniakeramik');
-    const collection = db.collection('users');
-
-    const { username, permissions, password } = await req.json();
-
-    if (!username) {
-      return NextResponse.json({ error: 'Username harus diisi' }, { status: 400 });
-    }
-
-    const updateFields: IUser = { updatedAt: new Date() };
-
-    if (permissions) {
-      updateFields.permissions = permissions;
-    }
-
-    if (password) {
-      if (password.length < 6) {
-        return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
-      }
-      updateFields.password = await bcrypt.hash(password, 10);
-    }
-
-    const result = await collection.updateOne({ username }, { $set: updateFields });
-
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: 'Pengguna tidak ditemukan' }, { status: 404 });
-    }
-
-    return NextResponse.json({ message: `Data pengguna '${username}' berhasil diperbarui` });
-  } catch (error) {
-    return NextResponse.json({ error: 'Gagal memperbarui pengguna: ' + error }, { status: 500 });
   }
 }
 
