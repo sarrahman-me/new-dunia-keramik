@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/db';
 import generateSku from '@/utils/generator/sku';
 import imagekit from '@/lib/imagekit';
+import { failure, success } from '@/utils/apiResponse';
 
 // GET products
 export async function GET(req: Request) {
@@ -11,8 +12,8 @@ export async function GET(req: Request) {
     const collection = db.collection('products');
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
 
     const query = search
@@ -29,9 +30,17 @@ export async function GET(req: Request) {
       .sort({ created_at: -1 })
       .toArray();
 
-    return NextResponse.json({ data, totalPages, currentPage: page });
+    return NextResponse.json(success(data, {
+      page,
+      limit,
+      total_data: totalItems,
+      total_pages: totalPages,
+    }));
   } catch (error) {
-    return NextResponse.json({ error: 'Gagal mengambil data: ' + error }, { status: 500 });
+    return NextResponse.json(
+      failure(500, 'Gagal mengambil data produk', error instanceof Error ? error.message : undefined),
+      { status: 500 }
+    );
   }
 }
 
@@ -45,10 +54,19 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const requiredFields = ['nama_barang', 'brand', 'kategori'];
+    const missingFields: Record<string, string> = {};
+
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json({ error: `Field '${field}' harus diisi` }, { status: 400 });
+        missingFields[field] = 'Wajib diisi';
       }
+    }
+
+    if (Object.keys(missingFields).length > 0) {
+      return NextResponse.json(
+        failure(400, 'Validasi gagal. Beberapa field wajib diisi.', undefined, missingFields),
+        { status: 400 }
+      );
     }
 
     const existingProduct = await collection.findOne({
@@ -59,7 +77,11 @@ export async function POST(req: Request) {
 
     if (existingProduct) {
       return NextResponse.json(
-        { error: 'Produk dengan nama, brand, dan kategori yang sama sudah pernah ditambahkan' },
+        failure(
+          409,
+          'Produk duplikat',
+          'Produk dengan nama, brand, dan kategori yang sama sudah pernah ditambahkan.'
+        ),
         { status: 409 }
       );
     }
@@ -72,7 +94,10 @@ export async function POST(req: Request) {
     }
 
     if (attempts >= 5) {
-      return NextResponse.json({ error: 'Gagal menghasilkan SKU unik' }, { status: 500 });
+      return NextResponse.json(
+        failure(500, 'Gagal menghasilkan SKU unik'),
+        { status: 500 }
+      );
     }
 
     // ✅ Upload base64 gambar ke ImageKit
@@ -116,8 +141,15 @@ export async function POST(req: Request) {
 
     const result = await collection.insertOne(product);
 
-    return NextResponse.json({ message: 'Produk berhasil ditambahkan', id: result.insertedId, sku });
+    return NextResponse.json(success({
+      message: 'Produk berhasil ditambahkan',
+      id: result.insertedId,
+      sku,
+    }));
   } catch (error) {
-    return NextResponse.json({ error: 'Gagal menambahkan produk: ' + error }, { status: 500 });
+    return NextResponse.json(
+      failure(500, 'Gagal menambahkan produk', error instanceof Error ? error.message : undefined),
+      { status: 500 }
+    );
   }
 }
