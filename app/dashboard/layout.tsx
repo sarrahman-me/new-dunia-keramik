@@ -1,5 +1,7 @@
 import React from "react";
 import { Metadata } from "next";
+import Sidebar from "@/layouts/sidebar";
+import BottomBar from "@/layouts/bottomBar";
 
 export const metadata: Metadata = {
   robots: {
@@ -17,11 +19,11 @@ export default async function DashboardLayout({
     <main className="bg-white min-h-screen md:p-2 text-sm lg:text-base">
       {/* sidebar */}
       <div className="p-2 pt-5 lg:p-5 fixed overflow-y-auto h-screen left-0 bottom-0 md:w-14 lg:w-72 min-h-screen hidden md:block select-none">
-        <p>Sidebar</p>
+        <Sidebar />
       </div>
 
       {/* main dashboard */}
-      <main className="bg-amber-50 p-2 lg:p-5 md:rounded-sm md:border min-h-screen ml-0 md:ml-14 lg:ml-72">
+      <main className="bg-amber-50/30 p-2 lg:p-5 md:rounded-sm md:border min-h-screen ml-0 md:ml-14 lg:ml-72">
         {children}
 
         {/* footer */}
@@ -41,8 +43,8 @@ export default async function DashboardLayout({
       </main>
 
       {/* bottom menu (mobile) */}
-      <div className="p-2 bg-gray-500 sticky w-full bottom-0 block md:hidden select-none">
-        <p>Bottom Bar</p>
+      <div className="p-2 bg-amber-50/30 sticky w-full bottom-0 block md:hidden select-none">
+        <BottomBar />
       </div>
     </main>
   );
