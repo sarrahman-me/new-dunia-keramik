@@ -79,7 +79,7 @@ const Sidebar = () => {
             <div
               key={i}
               onClick={() => router.push(item.href)}
-              className={`flex items-center space-x-3 p-2 rounded-sm text-secondary-medium cursor-pointer select-none ${isActive
+              className={`flex items-center space-x-3 p-2 rounded-sm text-gray-500 cursor-pointer select-none ${isActive
                 ? "bg-amber-600 text-white font-medium shadow-sm"
                 : "hover:bg-amber-50"
                 }`}
@@ -96,7 +96,7 @@ const Sidebar = () => {
         })}
         <div
           onClick={handleLogout}
-          className={`flex items-center space-x-3 p-2 rounded-sm text-secondary-medium cursor-pointer select-none hover:bg-red-50`}
+          className={`flex items-center space-x-3 p-2 rounded-sm text-gray-500 cursor-pointer select-none hover:bg-red-50`}
         >
           <span
             className={`text-lg text-red-600`}

@@ -1,42 +1,44 @@
-interface textfieldProps {
-  type?: string;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+import { HTMLInputTypeAttribute } from "react";
+import Label from "./label";
+
+interface ITextfield {
+  name: string;
+  setValue: (v: any) => void;
+  value?: any;
+  type?: HTMLInputTypeAttribute;
   label?: string;
   placeholder?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onChange: (v: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value?: any;
   disabled?: boolean;
+  errorMessage?: string;
 }
 
-const Textfield = ({
-  type = "text",
+export default function Textfield({
+  name,
+  type,
   label,
   placeholder,
-  onChange,
+  setValue,
   value,
   disabled,
-}: textfieldProps) => {
+  errorMessage,
+}: ITextfield) {
   return (
-    <div className="space-y-1 w-full">
-      <label
-        htmlFor={label}
-        className="block text-sm md:text-base font-medium text-amber-700"
-      >
-        {label}
-      </label>
+    <div className="flex flex-col">
+      <Label htmlFor={name}>{label}</Label>
       <input
-        onChange={(e) => onChange(e.target.value)}
-        type={type}
-        value={value}
-        name={label}
         disabled={disabled}
-        id={label}
-        className="bg-white disabled:bg-gray-200 disabled:cursor-not-allowed outline-none border text-amber-950 rounded-lg focus:ring-amber-600 focus:border-amber-600 block w-full p-1.5 min-w-32"
+        onChange={(e) => setValue(e.target.value)}
+        value={value}
+        className="bg-white disabled:bg-gray-200 disabled:cursor-not-allowed outline-none border text-black rounded-sm focus:ring-amber-600 focus:border-amber-600 block w-full p-1.5 min-w-32"
+        id={name}
+        type={type || "text"}
         placeholder={placeholder}
       />
+      {errorMessage && (
+        <p className="text-xs text-red-400 my-1">{errorMessage}</p>
+      )}
     </div>
   );
-};
-
-export default Textfield;
+}

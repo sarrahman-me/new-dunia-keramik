@@ -51,7 +51,7 @@ const BottomBar = () => {
             <span className="text-xl">{item.icon}</span>
             {
               //              <p
-              //  className={`text-xs text-center ${isActive ? "text-white" : "text-secondary-medium/50"
+              //  className={`text-xs text-center ${isActive ? "text-white" : "text-gray-500/50"
               //    } inline`}
               //>
               //  {item.title}

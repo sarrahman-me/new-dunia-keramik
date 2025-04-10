@@ -1,73 +1,129 @@
-"use client";
+import FileInput from "@/components/fileInput";
+import Select from "@/components/select";
+import SwitchToggle from "@/components/switchToggle";
 import Textfield from "@/components/textfield";
-import { useState } from "react";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface InputGroupProps {
   forms: {
-    type: "select" | "number" | "text";
-    label: string;
     name: string;
+    label: string;
+    type: string;
     placeholder?: string;
-    lists?: { [key: string]: string }[];
+    autoFocus?: boolean;
     staticData?: boolean;
+    lists?: any[];
+    disabled?: boolean;
+    acceptFormat?: string;
+    errorMessage?: string;
+    urlDataApi?: string;
+    variant?: "outlined" | "standard" | string;
     keyValue?: {
       key: string;
       value: string;
     };
-    disabled?: boolean;
   }[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setData: (values: Record<string, any>) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: Record<string, any>;
+  setData: ({ }: any) => void;
+  data: any;
+  error?: {
+    fields: any;
+  };
 }
 
-const InputGroup = ({ forms, setData, data }: InputGroupProps) => {
-  const [inputData, setInputData] = useState(data);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleChange = (name: string, value: any) => {
-    const newData = { ...inputData, [name]: value };
-    setInputData(newData);
-    setData(newData);
-  };
-
+const InputGroup = ({ forms, data, setData }: InputGroupProps) => {
   return (
-    <div className="space-y-4">
-      {forms.map((form) => (
-        <div key={form.name} className="flex flex-col">
-          <label
-            htmlFor={form.name}
-            className="block text-sm md:text-base font-medium text-amber-700"
-          >
-            {form.label}
-          </label>
+    <div className="space-y-6">
+      {forms.map((form, i) => {
+        /**
+         * mendefinisikan select component
+         */
 
-          {form.type === "select" ? (
-            <select
-              id={form.name}
-              value={inputData[form.name] || ""}
-              onChange={(e) => handleChange(form.name, e.target.value)}
-              disabled={form.disabled}
-              className="bg-white disabled:bg-gray-200 disabled:cursor-not-allowed outline-none border text-amber-950 rounded-lg focus:ring-amber-600 focus:border-amber-600 block w-full p-1.5 min-w-32"
-            >
-              <option value="">{form.placeholder}</option>
-              {form.lists?.map((item, index) => (
-                <option key={index} value={item[form.keyValue!.key]}>
-                  {item[form.keyValue!.value]}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <Textfield
-              type={form.type}
-              value={inputData[form.name] || ""}
-              onChange={(value) => handleChange(form.name, value)}
-              disabled={form.disabled}
+        if (form.type === "select") {
+          return (
+            <Select
+              key={i}
+              urlDataApi={form.urlDataApi}
+              label={form.label}
+              staticData={form.staticData}
+              lists={form.lists}
+              value={data[form.name]}
+              placeholder={form.placeholder}
+              setValue={(value) =>
+                setData({
+                  ...data,
+                  [form.name]: value,
+                })
+              }
+              keyValue={
+                form.keyValue || {
+                  key: "",
+                  value: "",
+                }
+              }
             />
-          )}
-        </div>
-      ))}
+          );
+        } else if (form.type === "file-input") {
+          /**
+           * mendefinisikan file input component
+           */
+
+          return (
+            <FileInput
+              key={i}
+              label={form.label}
+              setFile={(file) =>
+                setData({
+                  ...data,
+                  [form.name]: file,
+                })
+              }
+              file={data[form.name] || ""}
+              acceptFormat={form.acceptFormat}
+            />
+          );
+        } else if (form.type === "toogle") {
+          /**
+           * mendefinisikan toogle switch component
+           */
+
+          return (
+            <SwitchToggle
+              key={i}
+              label={form.label}
+              setValue={(v) =>
+                setData({
+                  ...data,
+                  [form.name]: v,
+                })
+              }
+              value={data[form.name] || false}
+            />
+          );
+        } else {
+          /**
+           * mendefinisikan textfield component
+           */
+
+          return (
+            <Textfield
+              name={form.name}
+              key={i}
+              label={form.label}
+              disabled={form.disabled}
+              errorMessage={form.errorMessage}
+              type={form.type}
+              placeholder={form.placeholder}
+              value={data[form.name] || ""}
+              setValue={(value) =>
+                setData({
+                  ...data,
+                  [form.name]: value,
+                })
+              }
+            />
+          );
+        }
+      })}
     </div>
   );
 };

@@ -8,7 +8,7 @@ interface buttonProps {
   fullWidth?: boolean;
   variant?: "contained" | "outlined";
   disabled?: boolean;
-  color?: "amber" | "secondary" | "red" | "orange" | "blue";
+  color?: "amber" | "gray" | "red" | "orange" | "blue";
   size?: "standart" | "small";
 }
 
@@ -30,11 +30,11 @@ const Button = ({
       outlined:
         "border-amber-600 text-amber-500 bg-transparent disabled:bg-gray-100 disabled:border-gray-300",
     },
-    secondary: {
+    gray: {
       contained:
-        "bg-grey-600 hover:bg-grey-700 text-white disabled:bg-gray-400",
+        "bg-gray-600 hover:bg-gray-700 text-white disabled:bg-gray-400",
       outlined:
-        "border-grey-600 text-grey-500 bg-transparent disabled:bg-gray-100 disabled:border-gray-300",
+        "border-gray-600 text-gray-500 bg-transparent disabled:bg-gray-100 disabled:border-gray-300",
     },
     red: {
       contained: "bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-400",

@@ -13,7 +13,10 @@ const Kalkulator = () => {
     kualitas: "",
     motif: "",
     tekstur: "",
-    berat: 0
+    berat: 0,
+    external_sku: "",
+    gambar_url: "",
+    design_url: ""
   });
 
   const handleSubmit = (e: FormEvent) => {
@@ -140,8 +143,20 @@ const Kalkulator = () => {
               type: "text",
               label: "Eksternal SKU",
               name: "external_sku",
+              placeholder: "Opsional"
             },
-
+            {
+              type: "file-input",
+              name: "gambar_url",
+              label: "Pilih Gambar",
+              acceptFormat: ".jpeg, .jpg, .png, .webp",
+            },
+            {
+              type: "file-input",
+              name: "design_url",
+              label: "Pilih Banner Design",
+              acceptFormat: ".jpeg, .jpg, .png, .webp",
+            },
           ]}
           setData={(values) => setPayload({ ...payload, ...values })}
           data={payload}
